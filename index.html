@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jual Beli Revv</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #e9e9eb;
+      --card: #ffffff;
+      --accent: #1f6feb;
+      --muted: #6b6b6b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: linear-gradient(180deg,var(--bg),#dcdde0);
+      color:#111;
+      padding:28px;
+      min-height:100vh;
+    }
+    .wrap{max-width:1100px;margin:0 auto;background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(250,250,250,.95));border-radius:14px;padding:22px;box-shadow:0 8px 30px rgba(16,24,40,.08)}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#6dd3ff);display:flex;align-items:center;justify-content:center;color:white;font-weight:800}
+    h1{font-size:20px;margin:0}
+    .lead{color:var(--muted);font-size:13px;margin:0}
+    .actions button{margin-left:8px}
+    .content{display:grid;grid-template-columns:1fr 360px;gap:22px;margin-top:18px}
+    .products{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(16,24,40,.04);display:flex;gap:12px;align-items:center}
+    .thumb{width:86px;height:86px;border-radius:10px;background:linear-gradient(135deg,#f3f6ff,#eef7ff);display:flex;align-items:center;justify-content:center;font-weight:700}
+    .meta h3{margin:0;font-size:16px}
+    .meta p{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .actions-right{margin-left:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+    .small-btn{padding:8px 12px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+    .small-btn.buy{background:linear-gradient(90deg,var(--accent),#5bb8ff);color:white}
+    .small-btn.view{background:transparent;border:1px solid rgba(16,24,40,.06);color:var(--muted)}
+    /* cart */
+    .card-cart{padding:16px;border-radius:12px;background:linear-gradient(180deg,#fff,#fbfbfd);box-shadow:0 6px 18px rgba(16,24,40,.04)}
+    .cart-title{font-size:16px;font-weight:700;margin:0 0 12px}
+    .cart-empty{color:var(--muted);font-size:14px}
+    .cart-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px dashed rgba(16,24,40,.04)}
+    .cart-item:first-of-type{border-top:0;padding-top:0}
+    .cart-total{display:flex;justify-content:space-between;font-weight:700;margin-top:12px}
+    .muted{color:var(--muted);font-size:13px}
+    footer{margin-top:14px;text-align:center;color:var(--muted);font-size:13px}
+    /* Glow animation */
+    @keyframes cartGlow {
+      0% { box-shadow: 0 0 0 rgba(31,111,235,0); transform: translateY(0); }
+      50% { box-shadow: 0 0 22px rgba(31,111,235,0.45); transform: translateY(-4px); }
+      100% { box-shadow: 0 0 0 rgba(31,111,235,0); transform: translateY(0); }
+    }
+    .cart-glow { animation: cartGlow .45s ease-out; }
+    /* small responsive */
+    @media (max-width:880px){ .content{grid-template-columns:1fr} .products{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">JR</div>
+        <div>
+          <h1>Jual Beli Revv</h1>
+          <p class="lead">Tampilan elegan & modern — Pilih, klik, dan beli.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="small-btn view">Kategori</button>
+        <button class="small-btn buy">Masuk / Daftar</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <main>
+        <h2 style="margin:0 0 12px">Daftar Barang</h2>
+        <div class="products" id="product-grid">
+          <!-- product cards injected by JS -->
+        </div>
+      </main>
+
+      <aside>
+        <div class="card-cart" id="cart-box">
+          <h3 class="cart-title">Keranjang</h3>
+          <div id="cart-list"><p class="cart-empty">Keranjang kosong — tambahkan barang dengan menekan tombol <strong>Beli</strong>.</p></div>
+
+          <div id="cart-summary" style="display:none">
+            <div class="cart-total"><span>Total:</span><span id="cart-total">Rp0</span></div>
+            <div style="margin-top:12px;display:flex;gap:8px">
+              <button class="small-btn view" onclick="clearCart()">Bersihkan</button>
+              <button class="small-btn buy" onclick="checkout()">Bayar</button>
+            </div>
+          </div>
+        </div>
+
+        <footer>&copy; <span id="year"></span> Jual Beli Revv</footer>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // Catalog + config
+    const catalog = {
+      1: { id:1, name: 'web klasik', price: 10000 },
+      2: { id:2, name: 'web keren', price: 15000 },
+      3: { id:3, name: 'free req', price: 18000 }
+    };
+    const DANA_NUMBER = '085828481568'; // nomor Dana untuk ditampilkan / disalin
+    const WA_NUMBER_INTL = '6285828481568'; // nomor WhatsApp (format internasional tanpa +)
+
+    // state
+    let cart = {};
+
+    // util: format IDR
+    function formatIDR(n){
+      try { return 'Rp' + Number(n).toLocaleString('id-ID'); }
+      catch(e){ return 'Rp' + n; }
+    }
+
+    // render products
+    function renderProducts(){
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = '';
+      Object.values(catalog).forEach(p=>{
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="thumb">${p.name.split(' ').map(a=>a[0]).join('').toUpperCase()}</div>
+          <div class="meta">
+            <h3>${p.name}</h3>
+            <p class="muted">${formatIDR(p.price)}</p>
+            <p class="muted" style="margin-top:6px;font-size:13px">${p.name === 'free req' ? 'Permintaan kustom — cepat & personal.' : 'Deskripsi singkat produk.'}</p>
+          </div>
+          <div class="actions-right">
+            <button class="small-btn view" onclick="viewProduct(${p.id})">Lihat</button>
+            <button class="small-btn buy" onclick="addToCart(${p.id})">Beli</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function viewProduct(id){
+      const p = catalog[id];
+      alert(`${p.name}\nHarga: ${formatIDR(p.price)}\n\nDeskripsi singkat.`);
+    }
+
+    // glow animation on cart
+    function glowCart(){
+      const box = document.getElementById('cart-box');
+      box.classList.add('cart-glow');
+      setTimeout(()=>box.classList.remove('cart-glow'), 480);
+    }
+
+    // cart rendering
+    function renderCart(){
+      const list = document.getElementById('cart-list');
+      const summary = document.getElementById('cart-summary');
+      const totalEl = document.getElementById('cart-total');
+      list.innerHTML = '';
+      const ids = Object.keys(cart);
+      if(ids.length.length === 0){} // noop
+      if(ids.length === 0){
+        list.innerHTML = '<p class="cart-empty">Keranjang kosong — tambahkan barang dengan menekan tombol <strong>Beli</strong>.</p>';
+        summary.style.display = 'none';
+        totalEl.textContent = 'Rp0';
+        return;
+      }
+      let total = 0;
+      ids.forEach(id=>{
+        const item = catalog[id];
+        const qty = cart[id];
+        const sub = item.price * qty;
+        total += sub;
+        const row = document.createElement('div');
+        row.className = 'cart-item';
+        row.innerHTML = `
+          <div>
+            <strong>${item.name}</strong>
+            <div style="font-size:13px;color:var(--muted)">${formatIDR(item.price)} × ${qty}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700">${formatIDR(sub)}</div>
+            <div style="margin-top:6px">
+              <button class="small-btn view" onclick="decrease(${id})">-</button>
+              <button class="small-btn view" onclick="increase(${id})">+</button>
+            </div>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+      totalEl.textContent = formatIDR(total);
+      summary.style.display = 'block';
+    }
+
+    function addToCart(id){
+      cart[id] = (cart[id] || 0) + 1;
+      renderCart();
+      glowCart();
+    }
+    function increase(id){ addToCart(id); }
+    function decrease(id){
+      if(!cart[id]) return;
+      cart[id]--;
+      if(cart[id] <= 0) delete cart[id];
+      renderCart();
+    }
+    function clearCart(){ cart = {}; renderCart(); }
+
+    // CHECKOUT: open pembayaran page (new tab) with QRIS + item list + copy button
+    function checkout(){
+      const ids = Object.keys(cart);
+      if(ids.length === 0){ alert('Keranjang masih kosong.'); return; }
+
+      // prepare item data for new window
+      const itemsArr = ids.map(id => {
+        return { name: catalog[id].name, qty: cart[id], price: catalog[id].price };
+      });
+      const total = itemsArr.reduce((s,i) => s + i.price * i.qty, 0);
+
+      // build minimal HTML for checkout window
+      const checkoutHTML = `
+        <!doctype html>
+        <html lang="id">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
+          <title>Pembayaran - Jual Beli Revv</title>
+          <style>
+            body{font-family:Inter,system-ui,Arial;background:#f6f7fb;margin:0;padding:28px;display:flex;align-items:center;justify-content:center;min-height:100vh}
+            .card{background:#fff;padding:20px;border-radius:12px;max-width:420px;width:100%;box-shadow:0 10px 30px rgba(16,24,40,.08);text-align:center}
+            h2{margin:0 0 8px}
+            p{margin:6px 0;color:#444}
+            .paynum{font-size:20px;font-weight:700;color:var(--accent);margin:10px 0}
+            img.qr{width:220px;height:220px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08);margin:12px 0}
+            ul{list-style:none;padding:0;text-align:left;margin:12px 0}
+            li{padding:6px 0;border-bottom:1px dashed #eee}
+            .btn{display:inline-block;padding:10px 14px;border-radius:10px;border:0;background:#1f6feb;color:white;cursor:pointer;margin:6px}
+            .btn.ghost{background:transparent;border:1px solid #ddd;color:#333}
+            .copy-note{font-size:13px;color:#666;margin-top:8px}
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h2>Metode Pembayaran</h2>
+            <p>Silakan bayar menggunakan QRIS (atau transfer Dana)</p>
+
+            <!-- QR generator (free public API) -->
+            <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent('DANA:' + DANA_NUMBER)}" alt="QRIS">
+
+            <div class="paynum">${DANA_NUMBER}</div>
+            <p><strong>Total: ${formatIDR(total)}</strong></p>
+
+            <h3>Daftar Barang</h3>
+            <ul id="item-list"></ul>
+
+            <div style="margin-top:10px">
+              <button class="btn" id="copyBtn">Salin Nomor Dana</button>
+              <button class="btn ghost" id="waBtn">Konfirmasi via WhatsApp</button>
+            </div>
+            <p class="copy-note">Setelah membayar, tekan "Konfirmasi via WhatsApp" untuk mengirim bukti pembayaran.</p>
+          </div>
+
+          <script>
+            (function(){
+              // items passed via window.name as JSON (safe and simple)
+              try{
+                const itemsJson = window.name || '[]';
+                const items = JSON.parse(itemsJson);
+                const ul = document.getElementById('item-list');
+                items.forEach(it=>{
+                  const li = document.createElement('li');
+                  li.textContent = it.name + ' x ' + it.qty + ' — ' + (new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(it.price * it.qty));
+                  ul.appendChild(li);
+                });
+              }catch(e){ console.error(e); }
+
+              // copy DANA
+              const DANA = '${DANA_NUMBER}';
+              document.getElementById('copyBtn').addEventListener('click', ()=>{
+                navigator.clipboard.writeText(DANA).then(()=>{ alert('Nomor Dana disalin'); }).catch(()=>{ alert('Tidak bisa menyalin (browser dibatasi)'); });
+              });
+
+              // WA confirm
+              document.getElementById('waBtn').addEventListener('click', ()=>{
+                try{
+                  const items = JSON.parse(window.name || '[]');
+                  let text = 'Halo, saya sudah melakukan pembayaran. Berikut pesanan saya:%0A%0A';
+                  let total = 0;
+                  items.forEach(it=>{
+                    text += '- ' + it.name + ' x ' + it.qty + ' = ' + (new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(it.price * it.qty)) + '%0A';
+                    total += it.price * it.qty;
+                  });
+                  text += '%0ATotal: ' + (new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(total)) + '%0A';
+                  text += '%0AMetode Pembayaran: DANA ' + DANA + '%0A';
+                  text += '%0ABerikut adalah bukti transfer: (lampirkan foto)';
+
+                  const waUrl = 'https://wa.me/${WA_NUMBER_INTL}?text=' + encodeURIComponent(text);
+                  window.open(waUrl, '_blank');
+                }catch(e){ alert('Gagal membuka WhatsApp.'); }
+              });
+            })();
+          </script>
+        </body>
+        </html>
+      `;
+
+      // open new window and pass items via window.name to avoid tricky escaping
+      const w = window.open('', '_blank');
+      if(!w){
+        alert('Pop-up terblokir. Izinkan pop-up untuk membuka halaman pembayaran.');
+        return;
+      }
+      // pass items information as JSON string to window.name BEFORE writing content
+      w.name = JSON.stringify(itemsArr);
+      w.document.open();
+      w.document.write(checkoutHTML);
+      w.document.close();
+
+      // ALSO open WhatsApp automatically with order summary (optional / as requested earlier)
+      // build WA message (short)
+      let waText = 'Halo, saya ingin melakukan pemesanan:%0A';
+      itemsArr.forEach(it => {
+        waText += `- ${it.name} x ${it.qty} = ${formatIDR(it.price * it.qty)}%0A`;
+      });
+      waText += `%0ATotal: ${formatIDR(total)}%0A%0AMetode Pembayaran: DANA ${DANA_NUMBER}`;
+      const waUrl = 'https://wa.me/' + WA_NUMBER_INTL + '?text=' + encodeURIComponent(waText);
+      // open WA in new tab (but don't block user: open after a short timeout so checkout page appears first)
+      setTimeout(()=>{ window.open(waUrl, '_blank'); }, 300);
+    }
+
+    // init
+    document.getElementById('year').textContent = new Date().getFullYear();
+    renderProducts();
+    renderCart();
+  </script>
+</body>
+</html>
